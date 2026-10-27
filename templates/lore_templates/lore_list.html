@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Lore entries</h1>
+
+<p><a href="{% url 'lore:create' %}">Add lore entry</a></p>
+
+<ul>
+    {% for entry in entries %}
+        <li>
+            <a href="{% url 'lore:detail' entry.pk %}">
+                {{ entry }}
+            </a>
+        </li>
+    {% empty %}
+        <li>No lore entries yet.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

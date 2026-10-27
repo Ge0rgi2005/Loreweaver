@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ scene.title }}</h1>
+
+<p>
+    Story:
+    <a href="{% url 'stories:detail' scene.story.pk %}">
+        {{ scene.story.title }}
+    </a>
+</p>
+
+<p>{{ scene.description }}</p>
+
+<p>
+    <a href="{% url 'scenes:edit' scene.pk %}">Edit scene</a>
+    <a href="{% url 'scenes:delete' scene.pk %}">Delete scene</a>
+</p>
+
+{% if not scene.is_ending %}
+    <a href="{% url 'scenes:choice_create' scene.pk %}">Add choice</a>
+{% endif %}
+
+<h2>Choices</h2>
+<ul>
+    {% for choice in scene.choices.all %}
+        <li>
+            {{ choice }}
+            <a href="{% url 'choices:delete' choice.pk %}">Delete</a>
+        </li>
+    {% empty %}
+        <li>No choices yet.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

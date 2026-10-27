@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Delete scene?</h1>
+<p>Are you sure you want to delete "{{ scene.title }}"?</p>
+<p>This may affect choices or other objects that reference this scene.</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirm deletion</button>
+    <a href="{% url 'scenes:detail' scene.pk %}">Cancel</a>
+</form>
+{% endblock %}

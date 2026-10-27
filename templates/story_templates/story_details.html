@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ story.title }}</h1>
+
+<p>{{ story.premise }}</p>
+
+<p>
+    <a href="{% url 'stories:edit' story.pk %}">Edit story</a>
+    <a href="{% url 'stories:delete' story.pk %}">Delete story</a>
+</p>
+
+{% if story.is_open %}
+    <a href="{% url 'stories:scene_create' story.pk %}">Add scene</a>
+{% endif %}
+
+<h2>Scenes</h2>
+<ul>
+    {% for scene in story.scenes.all %}
+        <li>
+            <a href="{% url 'scenes:detail' scene.pk %}">
+                {{ scene.title }}
+            </a>
+        </li>
+    {% empty %}
+        <li>No scenes yet.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

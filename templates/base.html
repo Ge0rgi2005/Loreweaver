@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Loreweaver{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{% url 'core:home' %}">Loreweaver</a>
+            <a href="{% url 'stories:list' %}">Stories</a>
+            <a href="{% url 'lore:list' %}">Lore</a>
+            <a href="{% url 'core:about' %}">About</a>
+        </nav>
+    </header>
+
+    {% if messages %}
+        <div id="messages">
+            {% for message in messages %}
+                <p class="message {{ message.tags }}">
+                    {{ message }}
+                </p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

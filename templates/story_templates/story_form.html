@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Stories | Loreweaver{% endblock %}
+
+{% block content %}
+<h1>Stories</h1>
+
+<form method="get">
+    {{ filter_form.as_p }}
+    <button type="submit">Search</button>
+</form>
+
+<p><a href="{% url 'stories:create' %}">Create a story</a></p>
+
+<ul>
+    {% for story in stories %}
+        <li>
+            <a href="{% url 'stories:detail' story.pk %}">
+                {{ story.title }}
+            </a>
+            — {{ story.scene_count }} scenes
+        </li>
+    {% empty %}
+        <li>No stories found.</li>
+    {% endfor %}
+</ul>
+
+{% if is_paginated %}
+    <nav aria-label="Pagination">
+        {% if page_obj.has_previous %}
+            <a href="?{% if request.GET %}{{ request.GET.urlencode }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">
+                Previous
+            </a>
+        {% endif %}
+
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+            <a href="?{% if request.GET %}{{ request.GET.urlencode }}&amp;{% endif %}page={{ page_obj.next_page_number }}">
+                Next
+            </a>
+        {% endif %}
+    </nav>
+{% endif %}
+{% endblock %}

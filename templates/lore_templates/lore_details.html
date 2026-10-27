@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ entry }}</h1>
+
+<p>{{ entry.description }}</p>
+
+<p>
+    <a href="{% url 'lore:edit' entry.pk %}">Edit</a>
+    <a href="{% url 'lore:delete' entry.pk %}">Delete</a>
+</p>
+{% endblock %}
