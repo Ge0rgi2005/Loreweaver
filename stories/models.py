@@ -34,11 +34,18 @@ class Story(TimeStampedModel):
     def __str__(self):
         return self.story_title
 
+    class Meta:
+        ordering = ['story_title']
+
     @property
     def is_open(self):
         return self.story_status == '✍'
+
     def get_start_scene(self):
         return self.scenes.filter(scene_start=True).first()
+
+    def get_absolute_url(self):
+        return reverse('stories:detail', kwargs={'pk': self.pk})
 
 class Scene(TimeStampedModel):
     story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name='scenes')
@@ -69,7 +76,7 @@ class Scene(TimeStampedModel):
         return not self.scene_end and not self.choices.exists()
 
     def get_absolute_url(self):
-        return reverse('stories:scene_detail', kwargs={'pk': self.pk})
+        return reverse('scenes:detail', kwargs={'pk': self.pk})
 
 class Choice(models.Model):
     text = models.CharField(max_length=200)
@@ -87,8 +94,18 @@ class Choice(models.Model):
     def clean(self):
         super().clean()
 
-        if self.current_scene.story and self.next_scene and self.current_scene.story != self.next_scene.story:
-            raise ValidationError("The next scene must belong to the same story as the current scene.")
+        errors = {}
+        if self.current_scene_id and self.current_scene.scene_end:
+            errors['current_scene'] = "Ending scenes can't have outgoing choices."
+
+        if self.current_scene_id and self.next_scene_id:
+            if self.current_scene.story != self.next_scene.story:
+                errors['next_scene'] = (
+                    "The next scene must belong to the same story as the current scene."
+                )
+
+        if errors:
+            raise ValidationError(errors)
     
     def __str__(self):
         return f"Choice: {self.text} (from Scene: {self.current_scene.scene_title})"

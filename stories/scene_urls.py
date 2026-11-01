@@ -9,15 +9,7 @@ urlpatterns = [
     path("<int:pk>/delete/", views.SceneDeleteView.as_view(), name="delete"),
     path(
         "<int:scene_pk>/choices/add/",
-        views.choice_create,
+        views.create_choice,
         name="choice_create",
-    ),
-]
-
-choice_urlpatterns = [
-    path(
-        "<int:pk>/delete/",
-        views.choice_delete,
-        name="choice_delete",
     ),
 ]

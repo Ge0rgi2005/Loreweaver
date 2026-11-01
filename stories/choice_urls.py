@@ -1,8 +1,8 @@
 from django.urls import path
-from .views import choice_delete
+from .views import delete_choice
 
 app_name = "choices"
 
 urlpatterns = [
-    path("<int:pk>/delete/", choice_delete, name="delete"),
+    path("<int:choice_pk>/delete/", delete_choice, name="delete"),
 ]

@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.functions import Lower
+from django.urls import reverse
 
 from core.models import TimeStampedModel
 from .validators import validate_author_name, min_author_name_length, non_whitespace_validator
@@ -22,8 +24,15 @@ class LoreEntry(TimeStampedModel):
         verbose_name = "Lore Entry"
         verbose_name_plural = "Lore Entries"
         constraints = [
-            models.UniqueConstraint(fields=['entry_name'], name='unique_entry_name', violation_error_message="A lore entry with this name already exists."),
+            models.UniqueConstraint(
+                Lower('entry_name'),
+                name='unique_entry_name',
+                violation_error_message="A lore entry with this name already exists.",
+            ),
         ]
 
     def __str__(self):
         return f"{self.entry_name} ({self.get_entry_type_display()})"
+
+    def get_absolute_url(self):
+        return reverse('lore:detail', kwargs={'pk': self.pk})

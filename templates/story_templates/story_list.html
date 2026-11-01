@@ -16,7 +16,7 @@
     {% for story in stories %}
         <li>
             <a href="{% url 'stories:detail' story.pk %}">
-                {{ story.title }}
+                {{ story.story_title }}
             </a>
             — {{ story.scene_count }} scenes
         </li>

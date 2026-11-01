@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{ story.title }}</h1>
+<h1>{{ story.story_title }}</h1>
 
-<p>{{ story.premise }}</p>
+<p>{{ story.story_premise }}</p>
 
 <p>
     <a href="{% url 'stories:edit' story.pk %}">Edit story</a>
@@ -19,7 +19,7 @@
     {% for scene in story.scenes.all %}
         <li>
             <a href="{% url 'scenes:detail' scene.pk %}">
-                {{ scene.title }}
+                {{ scene.scene_title }}
             </a>
         </li>
     {% empty %}
