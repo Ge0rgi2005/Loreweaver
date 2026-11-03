@@ -1,0 +1,39 @@
+<form method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+        </div>
+    {% endif %}
+
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+    {% for field in form.visible_fields %}
+        <div class="mb-3">
+            {% if field.field.widget.input_type == "checkbox" %}
+                <div class="form-check">
+                    {{ field }}
+                    <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                </div>
+            {% else %}
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+            {% endif %}
+
+            {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% for error in field.errors %}
+                <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">{{ submit_label|default:"Save" }}</button>
+        {% if cancel_url %}
+            <a href="{{ cancel_url }}" class="btn btn-outline-secondary">Cancel</a>
+        {% endif %}
+    </div>
+</form>

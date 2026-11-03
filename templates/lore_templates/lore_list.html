@@ -1,19 +1,24 @@
 {% extends "base.html" %}
 
+{% block title %}Lore | Loreweaver{% endblock %}
+
 {% block content %}
-<h1>Lore entries</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 mb-0">Lore codex</h1>
+    <a href="{% url 'lore:create' %}" class="btn btn-primary">Add lore entry</a>
+</div>
 
-<p><a href="{% url 'lore:create' %}">Add lore entry</a></p>
-
-<ul>
+<div class="list-group">
     {% for entry in entries %}
-        <li>
-            <a href="{% url 'lore:detail' entry.pk %}">
-                {{ entry }}
-            </a>
-        </li>
+        <a href="{% url 'lore:detail' entry.pk %}" class="list-group-item list-group-item-action">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-1">{{ entry.entry_name }}</h2>
+                <span class="badge text-bg-secondary">{{ entry.entry_type }} {{ entry.get_entry_type_display }}</span>
+            </div>
+            <p class="mb-0 small text-body-secondary">{{ entry.entry_description|truncatewords:20|default:"No description yet." }}</p>
+        </a>
     {% empty %}
-        <li>No lore entries yet.</li>
+        <div class="alert alert-info mb-0">The codex is empty. Add the first character, place or artifact.</div>
     {% endfor %}
-</ul>
+</div>
 {% endblock %}

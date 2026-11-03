@@ -3,6 +3,7 @@ from django.urls import reverse
 
 from .forms import ChoiceForm, SceneForm, StoryEditForm
 from .models import Choice, Scene, Story
+from .services import check_story_health
 
 
 class StoryPageTests(TestCase):
@@ -244,3 +245,190 @@ class StoryPageTests(TestCase):
 
         self.assertRedirects(response, reverse("stories:list"))
         self.assertFalse(Story.objects.filter(pk=self.story.pk).exists())
+
+
+class StoryHealthTests(TestCase):
+    def setUp(self):
+        self.story = Story.objects.create(
+            story_title="Health Test Tale",
+            story_premise="A sufficiently long premise for this health test.",
+        )
+
+    def make_scene(self, title, **flags):
+        return Scene.objects.create(
+            story=self.story,
+            scene_title=title,
+            scene_content=f"{title} content.",
+            **flags,
+        )
+
+    def test_health_report_handles_a_loop_and_reachable_ending_in_two_queries(self):
+        start = self.make_scene("Start", scene_start=True)
+        loop = self.make_scene("Loop")
+        ending = self.make_scene("Ending", scene_end=True)
+        Choice.objects.create(text="Enter loop", current_scene=start, next_scene=loop)
+        Choice.objects.create(text="Go back", current_scene=loop, next_scene=start)
+        Choice.objects.create(text="Finish", current_scene=loop, next_scene=ending)
+
+        with self.assertNumQueries(3):
+            report = check_story_health(self.story)
+
+        self.assertTrue(report.has_start)
+        self.assertEqual(report.unreachable, [])
+        self.assertEqual(report.dead_ends, [])
+        self.assertEqual(report.reachable_endings, [ending])
+        self.assertTrue(report.is_healthy)
+
+    def test_health_report_finds_an_orphan_scene(self):
+        start = self.make_scene("Start", scene_start=True)
+        ending = self.make_scene("Ending", scene_end=True)
+        orphan = self.make_scene("Orphan")
+        Choice.objects.create(text="Finish", current_scene=start, next_scene=ending)
+
+        report = check_story_health(self.story)
+
+        self.assertEqual(report.unreachable, [orphan])
+        self.assertEqual(report.dead_ends, [orphan])
+        self.assertFalse(report.is_healthy)
+
+    def test_health_report_finds_choices_without_a_destination(self):
+        start = self.make_scene("Start", scene_start=True)
+        open_choice = Choice.objects.create(
+            text="Choose later",
+            current_scene=start,
+        )
+
+        report = check_story_health(self.story)
+
+        self.assertEqual(report.open_choices, [open_choice])
+        self.assertEqual(report.dead_ends, [])
+        self.assertFalse(report.is_healthy)
+
+    def test_health_report_finds_no_reachable_endings(self):
+        start = self.make_scene("Start", scene_start=True)
+        next_scene = self.make_scene("Next")
+        Choice.objects.create(text="Continue", current_scene=start, next_scene=next_scene)
+
+        report = check_story_health(self.story)
+
+        self.assertEqual(report.reachable_endings, [])
+        self.assertFalse(report.is_healthy)
+
+    def test_health_report_handles_an_empty_story(self):
+        report = check_story_health(self.story)
+
+        self.assertFalse(report.has_start)
+        self.assertEqual(report.dead_ends, [])
+        self.assertEqual(report.open_choices, [])
+        self.assertEqual(report.unreachable, [])
+        self.assertEqual(report.reachable_endings, [])
+        self.assertFalse(report.is_healthy)
+
+    def test_health_page_renders_report(self):
+        self.make_scene("Opening", scene_start=True)
+
+        response = self.client.get(reverse("stories:health", args=[self.story.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["story"], self.story)
+        self.assertFalse(response.context["report"].is_healthy)
+
+
+class StoryPlayTests(TestCase):
+    def setUp(self):
+        self.story = Story.objects.create(
+            story_title="Play Test Tale",
+            story_premise="A sufficiently long premise for this play test.",
+        )
+        self.start = Scene.objects.create(
+            story=self.story,
+            scene_title="Opening",
+            scene_content="The story begins.",
+            scene_start=True,
+        )
+        self.ending = Scene.objects.create(
+            story=self.story,
+            scene_title="The End",
+            scene_content="The story is over.",
+            scene_end=True,
+        )
+        self.choice = Choice.objects.create(
+            text="Finish the story",
+            current_scene=self.start,
+            next_scene=self.ending,
+        )
+
+    def test_reader_can_follow_choice_to_ending_and_restart(self):
+        play_url = reverse("stories:play", args=[self.story.pk])
+        response = self.client.get(play_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["scene"], self.start)
+        self.assertEqual(response.context["steps"], 0)
+
+        response = self.client.post(
+            reverse(
+                "stories:play_choose",
+                args=[self.story.pk, self.choice.pk],
+            )
+        )
+        self.assertRedirects(response, play_url)
+
+        response = self.client.get(play_url)
+        self.assertEqual(response.context["scene"], self.ending)
+        self.assertTrue(response.context["finished"])
+        self.assertEqual(response.context["steps"], 1)
+        self.assertEqual(response.context["path"], [self.start, self.ending])
+        self.assertContains(response, "The End")
+
+        response = self.client.post(
+            reverse("stories:play_restart", args=[self.story.pk])
+        )
+        self.assertRedirects(response, play_url)
+        response = self.client.get(play_url)
+        self.assertEqual(response.context["scene"], self.start)
+        self.assertEqual(response.context["steps"], 0)
+
+    def test_choice_cannot_be_used_from_another_scene(self):
+        unrelated = Scene.objects.create(
+            story=self.story,
+            scene_title="Other",
+            scene_content="Other.",
+        )
+        invalid_choice = Choice.objects.create(
+            text="Skip ahead",
+            current_scene=unrelated,
+            next_scene=self.ending,
+        )
+
+        self.client.get(reverse("stories:play", args=[self.story.pk]))
+        response = self.client.post(
+            reverse(
+                "stories:play_choose",
+                args=[self.story.pk, invalid_choice.pk],
+            )
+        )
+
+        self.assertRedirects(response, reverse("stories:play", args=[self.story.pk]))
+        self.assertEqual(
+            self.client.get(reverse("stories:play", args=[self.story.pk])).context["scene"],
+            self.start,
+        )
+
+    def test_invalid_session_scene_is_reset_to_start(self):
+        session = self.client.session
+        session[f"play_{self.story.pk}"] = [999999]
+        session.save()
+
+        response = self.client.get(reverse("stories:play", args=[self.story.pk]))
+
+        self.assertEqual(response.context["scene"], self.start)
+        self.assertEqual(response.context["path"], [self.start])
+
+    def test_story_without_start_redirects_with_message(self):
+        self.start.scene_start = False
+        self.start.save()
+
+        response = self.client.get(reverse("stories:play", args=[self.story.pk]))
+
+        self.assertRedirects(response, reverse("stories:detail", args=[self.story.pk]))

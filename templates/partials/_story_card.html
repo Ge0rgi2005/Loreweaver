@@ -1,0 +1,21 @@
+<div class="card story-card h-100 shadow-sm">
+    <div class="card-body d-flex flex-column">
+        <div class="mb-2">
+            <span class="badge text-bg-secondary">{{ story.story_genre }} {{ story.get_story_genre_display }}</span>
+            <span class="badge {% if story.is_open %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                {{ story.story_status }} {{ story.get_story_status_display }}
+            </span>
+        </div>
+
+        <h2 class="h5 card-title">
+            <a href="{{ story.get_absolute_url }}" class="stretched-link text-decoration-none">{{ story.story_title }}</a>
+        </h2>
+
+        <p class="card-text text-body-secondary">{{ story.story_premise|truncatewords:25 }}</p>
+
+        <div class="mt-auto small text-body-secondary">
+            {% if story.story_author %}by {{ story.story_author }} · {% endif %}
+            {{ story.scene_count }} scene{{ story.scene_count|pluralize }}
+        </div>
+    </div>
+</div>

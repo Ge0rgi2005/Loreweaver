@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ story.story_title }} health check | Loreweaver{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h1 class="h2">Story health check</h1>
+        <p class="text-body-secondary mb-0">{{ story.story_title }}</p>
+    </div>
+    <a href="{% url 'stories:detail' story.pk %}" class="btn btn-outline-secondary">Back to story</a>
+</div>
+
+{% if report.is_healthy %}
+    <div class="alert alert-success">This story is ready to play and has a reachable ending.</div>
+{% else %}
+    <div class="alert alert-warning">This story has issues that may prevent readers from completing it.</div>
+{% endif %}
+
+<section class="mb-4">
+    <h2 class="h5">Start scene</h2>
+    {% if report.has_start %}
+        <p class="text-success mb-0">A start scene is set.</p>
+    {% else %}
+        <p class="text-danger mb-0">No start scene. The story cannot be played.</p>
+    {% endif %}
+</section>
+
+<section class="mb-4">
+    <h2 class="h5">Dead ends</h2>
+    <ul class="list-group">
+        {% for scene in report.dead_ends %}
+            <li class="list-group-item">{{ scene.scene_title }}</li>
+        {% empty %}
+            <li class="list-group-item text-body-secondary">None</li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="mb-4">
+    <h2 class="h5">Unfinished choices</h2>
+    <ul class="list-group">
+        {% for choice in report.open_choices %}
+            <li class="list-group-item">{{ choice.current_scene.scene_title }}: {{ choice.text }}</li>
+        {% empty %}
+            <li class="list-group-item text-body-secondary">None</li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="mb-4">
+    <h2 class="h5">Unreachable scenes</h2>
+    <ul class="list-group">
+        {% for scene in report.unreachable %}
+            <li class="list-group-item">{{ scene.scene_title }}</li>
+        {% empty %}
+            <li class="list-group-item text-body-secondary">None</li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section>
+    <h2 class="h5">Reachable endings</h2>
+    {% if report.reachable_endings %}
+        <ul class="list-group">
+            {% for scene in report.reachable_endings %}
+                <li class="list-group-item">{{ scene.scene_title }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-danger mb-0">No reachable ending. Readers cannot finish the story.</p>
+    {% endif %}
+</section>
+{% endblock %}

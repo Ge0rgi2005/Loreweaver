@@ -1,12 +1,35 @@
 {% extends "base.html" %}
 
+{% block title %}{{ entry.entry_name }} | Loreweaver{% endblock %}
+
 {% block content %}
-<h1>{{ entry }}</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <span class="badge text-bg-secondary mb-2">{{ entry.entry_type }} {{ entry.get_entry_type_display }}</span>
+        <h1 class="h2 mb-1">{{ entry.entry_name }}</h1>
+        <p class="text-body-secondary mb-0">
+            {% if entry.entry_author %}by {{ entry.entry_author }} · {% endif %}added {{ entry.created_at|date:"j M Y" }}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'lore:edit' entry.pk %}" class="btn btn-outline-secondary">Edit</a>
+        <a href="{% url 'lore:delete' entry.pk %}" class="btn btn-outline-danger">Delete</a>
+    </div>
+</div>
 
-<p>{{ entry.entry_description }}</p>
+<div class="card card-body mb-4">
+    {{ entry.entry_description|linebreaks|default:"<span class='text-body-secondary'>No description yet.</span>" }}
+</div>
 
-<p>
-    <a href="{% url 'lore:edit' entry.pk %}">Edit</a>
-    <a href="{% url 'lore:delete' entry.pk %}">Delete</a>
-</p>
+<h2 class="h5">Appears in</h2>
+<div class="list-group">
+    {% for scene in entry.scenes.all %}
+        <a href="{% url 'scenes:detail' scene.pk %}" class="list-group-item list-group-item-action">
+            {{ scene.scene_title }}
+            <span class="text-body-secondary">in {{ scene.story.story_title }}</span>
+        </a>
+    {% empty %}
+        <div class="alert alert-info mb-0">No scene uses this entry yet.</div>
+    {% endfor %}
+</div>
 {% endblock %}

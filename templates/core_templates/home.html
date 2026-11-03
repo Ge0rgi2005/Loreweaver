@@ -1,7 +1,33 @@
 {% extends "base.html" %}
 
+{% block title %}Loreweaver | Branching stories{% endblock %}
+
 {% block content %}
-<h1>Welcome to Loreweaver</h1>
-<p>Build worlds, write scenes, and weave branching stories.</p>
-<a href="{% url 'stories:list' %}">Explore stories</a>
+<div class="text-center py-5">
+    <h1 class="display-4 fw-bold">🧵 Lore<span style="color: var(--lw-accent)">weaver</span></h1>
+    <p class="lead text-body-secondary">Write branching stories, one choice at a time, and weave them into a shared world.</p>
+    <a href="{% url 'stories:list' %}" class="btn btn-primary btn-lg">Explore stories</a>
+    <a href="{% url 'stories:create' %}" class="btn btn-outline-secondary btn-lg">Start a story</a>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="col">
+        <div class="card h-100 card-body">
+            <h2 class="h5">📖 Stories</h2>
+            <p class="mb-0 text-body-secondary">Every adventure begins with a premise, and stays open for anyone to extend.</p>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 card-body">
+            <h2 class="h5">🔀 Scenes and choices</h2>
+            <p class="mb-0 text-body-secondary">Link scenes together with choices, and let readers pick their own path.</p>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 card-body">
+            <h2 class="h5">📜 The lore codex</h2>
+            <p class="mb-0 text-body-secondary">Characters, places and artifacts live in a shared codex, woven into any scene.</p>
+        </div>
+    </div>
+</div>
 {% endblock %}

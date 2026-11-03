@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Add choice to {{ scene.scene_title }}</h1>
-
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save choice</button>
-</form>
+{% url 'scenes:detail' scene.pk as back_url %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="h3 mb-4">Add a choice to “{{ scene.scene_title }}”</h1>
+        {% include "partials/_form.html" with submit_label="Save choice" cancel_url=back_url %}
+    </div>
+</div>
 {% endblock %}

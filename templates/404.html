@@ -1,8 +1,13 @@
-
 {% extends "base.html" %}
 
+{% block title %}Page not found | Loreweaver{% endblock %}
+
 {% block content %}
-<h1>Page not found</h1>
-<p>The page you requested could not be found.</p>
-<a href="{% url 'core:home' %}">Return home</a>
+<div class="text-center py-5">
+    <p class="display-1 fw-bold mb-0">404</p>
+    <h1 class="h3 mb-3">This page wandered off the map</h1>
+    <p class="text-body-secondary">The page you're looking for doesn't exist, or the story was deleted.</p>
+    <a href="{% url 'core:home' %}" class="btn btn-primary">Return home</a>
+    <a href="{% url 'stories:list' %}" class="btn btn-outline-secondary">Browse stories</a>
+</div>
 {% endblock %}

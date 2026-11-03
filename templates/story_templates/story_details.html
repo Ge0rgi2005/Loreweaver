@@ -1,29 +1,57 @@
 {% extends "base.html" %}
 
+{% block title %}{{ story.story_title }} | Loreweaver{% endblock %}
+
 {% block content %}
-<h1>{{ story.story_title }}</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <div class="mb-2">
+            {% include "partials/_story_badges.html" with story=story %}
+        </div>
+        <h1 class="h2">{{ story.story_title }}</h1>
+        <p class="text-body-secondary mb-0">
+            {% if story.story_author %}by {{ story.story_author }} · {% endif %}started {{ story.created_at|date:"j M Y" }}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'stories:health' story.pk %}" class="btn btn-outline-info">Health check</a>
+        <a href="{% url 'stories:edit' story.pk %}" class="btn btn-outline-secondary">Edit</a>
+        <a href="{% url 'stories:delete' story.pk %}" class="btn btn-outline-danger">Delete</a>
+    </div>
+</div>
 
-<p>{{ story.story_premise }}</p>
+<p class="lead">{{ story.story_premise|linebreaksbr }}</p>
 
-<p>
-    <a href="{% url 'stories:edit' story.pk %}">Edit story</a>
-    <a href="{% url 'stories:delete' story.pk %}">Delete story</a>
-</p>
+{% with start=story.get_start_scene %}
+    {% if start %}
+        <a href="{% url 'stories:play' story.pk %}" class="btn btn-success mb-4">▶ Start reading</a>
+    {% else %}
+        <div class="alert alert-warning">This story has no starting scene yet.</div>
+    {% endif %}
+{% endwith %}
 
-{% if story.is_open %}
-    <a href="{% url 'stories:scene_create' story.pk %}">Add scene</a>
-{% endif %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Scenes</h2>
+    {% if story.is_open %}
+        <a href="{% url 'stories:scene_create' story.pk %}" class="btn btn-primary btn-sm">Add scene</a>
+    {% else %}
+        <span class="small text-body-secondary">This story isn't open to new scenes.</span>
+    {% endif %}
+</div>
 
-<h2>Scenes</h2>
-<ul>
+<div class="list-group">
     {% for scene in story.scenes.all %}
-        <li>
-            <a href="{% url 'scenes:detail' scene.pk %}">
-                {{ scene.scene_title }}
-            </a>
-        </li>
+        <a href="{% url 'scenes:detail' scene.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <span>{{ scene.scene_title }}</span>
+            <span>
+                {% if scene.scene_start %}<span class="badge text-bg-success">Start</span>{% endif %}
+                {% if scene.scene_end %}<span class="badge text-bg-dark">Ending</span>{% endif %}
+                {% if scene.is_dead_end %}<span class="badge text-bg-warning">Dead end</span>{% endif %}
+                <span class="badge text-bg-secondary">{{ scene.choices.count }} choice{{ scene.choices.count|pluralize }}</span>
+            </span>
+        </a>
     {% empty %}
-        <li>No scenes yet.</li>
+        <div class="alert alert-info mb-0">No scenes yet.</div>
     {% endfor %}
-</ul>
+</div>
 {% endblock %}

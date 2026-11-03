@@ -9,6 +9,14 @@ urlpatterns = [
     path("<int:pk>/", views.StoryDetailView.as_view(), name="detail"),
     path("<int:pk>/edit/", views.StoryUpdateView.as_view(), name="edit"),
     path("<int:pk>/delete/", views.StoryDeleteView.as_view(), name="delete"),
+    path("<int:pk>/health/", views.story_health, name="health"),
+    path("<int:pk>/play/", views.play_story, name="play"),
+    path(
+        "<int:pk>/play/choose/<int:choice_pk>/",
+        views.choose_story_choice,
+        name="play_choose",
+    ),
+    path("<int:pk>/play/restart/", views.restart_story, name="play_restart"),
 
     path(
         "<int:story_pk>/scenes/add/",

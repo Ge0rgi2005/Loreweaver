@@ -3,11 +3,11 @@
 {% block title %}{% if story %}Edit story{% else %}Create a story{% endif %} | Loreweaver{% endblock %}
 
 {% block content %}
-<h1>{% if story %}Edit story{% else %}Create a story{% endif %}</h1>
-
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save story</button>
-</form>
+{% if story %}{% url 'stories:detail' story.pk as back_url %}{% else %}{% url 'stories:list' as back_url %}{% endif %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="h3 mb-4">{% if story %}Edit story{% else %}Create a story{% endif %}</h1>
+        {% include "partials/_form.html" with submit_label="Save story" cancel_url=back_url %}
+    </div>
+</div>
 {% endblock %}

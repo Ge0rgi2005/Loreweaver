@@ -1,0 +1,32 @@
+<nav class="navbar navbar-expand-md bg-body-tertiary border-bottom">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'core:home' %}">🧵 Lore<span>weaver</span></a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.view_name == 'core:home' %}active{% endif %}"
+                       href="{% url 'core:home' %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.namespace == 'stories' or request.resolver_match.namespace == 'scenes' or request.resolver_match.namespace == 'choices' %}active{% endif %}"
+                       href="{% url 'stories:list' %}">Stories</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.namespace == 'lore' %}active{% endif %}"
+                       href="{% url 'lore:list' %}">Lore</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.view_name == 'core:about' %}active{% endif %}"
+                       href="{% url 'core:about' %}">About</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

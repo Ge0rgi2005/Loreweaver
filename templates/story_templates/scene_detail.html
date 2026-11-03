@@ -1,35 +1,74 @@
 {% extends "base.html" %}
 
+{% block title %}{{ scene.scene_title }} | Loreweaver{% endblock %}
+
 {% block content %}
-<h1>{{ scene.scene_title }}</h1>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'stories:list' %}">Stories</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'stories:detail' scene.story.pk %}">{{ scene.story.story_title }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ scene.scene_title }}</li>
+    </ol>
+</nav>
 
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div>
+        <h1 class="h2 mb-1">{{ scene.scene_title }}</h1>
+        <p class="text-body-secondary mb-0">
+            {% if scene.scene_start %}<span class="badge text-bg-success">Start</span>{% endif %}
+            {% if scene.scene_end %}<span class="badge text-bg-dark">Ending</span>{% endif %}
+            {% if scene.scene_author %}by {{ scene.scene_author }}{% endif %}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'scenes:edit' scene.pk %}" class="btn btn-outline-secondary">Edit</a>
+        <a href="{% url 'scenes:delete' scene.pk %}" class="btn btn-outline-danger">Delete</a>
+    </div>
+</div>
+
+<div class="card card-body mb-4">{{ scene.scene_content|linebreaks }}</div>
+
+<h2 class="h5">Lore in this scene</h2>
 <p>
-    Story:
-    <a href="{% url 'stories:detail' scene.story.pk %}">
-        {{ scene.story.story_title }}
-    </a>
+    {% for entry in scene.lore_entries.all %}
+        <a href="{% url 'lore:detail' entry.pk %}" class="badge text-bg-info text-decoration-none">
+            {{ entry.entry_type }} {{ entry.entry_name }}
+        </a>
+    {% empty %}
+        <span class="text-body-secondary">No lore linked to this scene.</span>
+    {% endfor %}
 </p>
 
-<p>{{ scene.scene_content }}</p>
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <h2 class="h5 mb-0">Choices</h2>
+    {% if not scene.scene_end %}
+        <a href="{% url 'scenes:choice_create' scene.pk %}" class="btn btn-primary btn-sm">Add choice</a>
+    {% endif %}
+</div>
 
-<p>
-    <a href="{% url 'scenes:edit' scene.pk %}">Edit scene</a>
-    <a href="{% url 'scenes:delete' scene.pk %}">Delete scene</a>
-</p>
-
-{% if not scene.scene_end %}
-    <a href="{% url 'scenes:choice_create' scene.pk %}">Add choice</a>
+{% if scene.is_dead_end %}
+    <div class="alert alert-warning">This scene is a dead end: it isn't an ending, and it has no choices yet.</div>
 {% endif %}
 
-<h2>Choices</h2>
-<ul>
+<ul class="list-group">
     {% for choice in scene.choices.all %}
-        <li>
-            {{ choice }}
-            <a href="{% url 'choices:delete' choice.pk %}">Delete</a>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ choice.text }}</strong>
+                {% if choice.next_scene %}
+                    <span class="text-body-secondary">→ <a href="{{ choice.next_scene.get_absolute_url }}">{{ choice.next_scene.scene_title }}</a></span>
+                {% else %}
+                    <span class="badge text-bg-warning">No destination yet</span>
+                {% endif %}
+            </div>
+            <a href="{% url 'choices:delete' choice.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
         </li>
     {% empty %}
-        <li>No choices yet.</li>
+        {% if scene.scene_end %}
+            <li class="list-group-item text-body-secondary">The end.</li>
+        {% else %}
+            <li class="list-group-item text-body-secondary">No choices yet.</li>
+        {% endif %}
     {% endfor %}
 </ul>
 {% endblock %}

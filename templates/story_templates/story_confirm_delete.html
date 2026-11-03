@@ -1,13 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Delete story?</h1>
-<p>Are you sure you want to delete "{{ story.story_title }}"?</p>
-<p>{{ cascade_warning }}</p>
-
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Confirm deletion</button>
-    <a href="{% url 'stories:detail' story.pk %}">Cancel</a>
-</form>
+{% url 'stories:detail' story.pk as back_url %}
+{% include "partials/_confirm_delete.html" with heading="Delete story?" object_label=story.story_title warning=cascade_warning cancel_url=back_url %}
 {% endblock %}

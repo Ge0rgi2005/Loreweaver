@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ story.story_title }} | Play | Loreweaver{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'stories:list' %}">Stories</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'stories:detail' story.pk %}">{{ story.story_title }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Play</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+    <div>
+        <h1 class="h2">{{ scene.scene_title }}</h1>
+        <p class="text-body-secondary">{{ story.story_title }}</p>
+    </div>
+    {% if not finished %}
+        <form method="post" action="{% url 'stories:play_restart' story.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary">Restart</button>
+        </form>
+    {% endif %}
+</div>
+
+<div class="card card-body mb-4">{{ scene.scene_content|linebreaks }}</div>
+
+{% if finished %}
+    <div class="alert alert-success">
+        <h2 class="h4">The End</h2>
+        <p class="mb-2">Your path:</p>
+        <ol class="mb-3">
+            {% for visited_scene in path %}
+                <li>{{ visited_scene.scene_title }}</li>
+            {% endfor %}
+        </ol>
+        <form method="post" action="{% url 'stories:play_restart' story.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Play again</button>
+        </form>
+    </div>
+{% else %}
+    <h2 class="h5">What do you do?</h2>
+    <div class="list-group">
+        {% for choice in choices %}
+            {% if choice.next_scene_id and choice.next_scene.story_id == story.pk and not path_limit_reached %}
+                <form method="post" action="{% url 'stories:play_choose' story.pk choice.pk %}" class="list-group-item">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link p-0 text-start text-decoration-none">{{ choice.text }}</button>
+                </form>
+            {% else %}
+                <div class="list-group-item d-flex justify-content-between">
+                    <span>{{ choice.text }}</span>
+                    <span class="badge text-bg-warning">
+                        {% if path_limit_reached %}Path limit reached{% else %}Unavailable{% endif %}
+                    </span>
+                </div>
+            {% endif %}
+        {% empty %}
+            <p class="list-group-item text-body-secondary">There are no choices here.</p>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

@@ -6,6 +6,127 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from .forms import StoryEditForm, StoryForm, SceneForm, ChoiceForm, StoryFilterForm
 from .models import Story, Scene, Choice
+from .services import check_story_health
+
+MAX_PLAY_PATH_LENGTH = 200
+
+
+def story_health(request, pk):
+    story = get_object_or_404(Story, pk=pk)
+    report = check_story_health(story)
+    return render(
+        request,
+        "story_templates/story_health.html",
+        {"story": story, "report": report},
+    )
+
+
+def _play_path(request, story, start_scene):
+    session_key = f"play_{story.pk}"
+    stored_path = request.session.get(session_key)
+    if stored_path is None:
+        path = [start_scene.pk]
+        request.session[session_key] = path
+        return path
+
+    invalid_path = (
+        not isinstance(stored_path, list)
+        or not stored_path
+        or any(type(scene_id) is not int for scene_id in stored_path)
+        or len(stored_path) > MAX_PLAY_PATH_LENGTH
+    )
+    if invalid_path:
+        valid_scene_ids = set()
+    else:
+        valid_scene_ids = set(
+            Scene.objects.filter(
+                story=story, pk__in=stored_path
+            ).values_list("pk", flat=True)
+        )
+
+    if invalid_path or valid_scene_ids != set(stored_path):
+        path = [start_scene.pk]
+        request.session[session_key] = path
+        return path
+    return stored_path
+
+
+def play_story(request, pk):
+    story = get_object_or_404(Story, pk=pk)
+    start_scene = story.scenes.filter(scene_start=True).first()
+    if start_scene is None:
+        request.session.pop(f"play_{story.pk}", None)
+        messages.warning(request, "This story has no starting scene yet.")
+        return redirect("stories:detail", pk=story.pk)
+
+    path = _play_path(request, story, start_scene)
+    scenes_by_id = {
+        scene.pk: scene
+        for scene in Scene.objects.filter(story=story, pk__in=path)
+    }
+    visited_scenes = [scenes_by_id[scene_id] for scene_id in path]
+    scene = visited_scenes[-1]
+    choices = scene.choices.select_related("next_scene").all()
+    finished = scene.scene_end
+
+    return render(
+        request,
+        "story_templates/story_play.html",
+        {
+            "story": story,
+            "scene": scene,
+            "choices": choices,
+            "path": visited_scenes,
+            "steps": len(path) - 1,
+            "finished": finished,
+            "path_limit_reached": len(path) >= MAX_PLAY_PATH_LENGTH,
+        },
+    )
+
+
+def choose_story_choice(request, pk, choice_pk):
+    story = get_object_or_404(Story, pk=pk)
+    if request.method != "POST":
+        return redirect("stories:play", pk=story.pk)
+
+    start_scene = story.scenes.filter(scene_start=True).first()
+    if start_scene is None:
+        request.session.pop(f"play_{story.pk}", None)
+        messages.warning(request, "This story has no starting scene yet.")
+        return redirect("stories:detail", pk=story.pk)
+
+    path = _play_path(request, story, start_scene)
+    current_scene_id = path[-1]
+    choice = get_object_or_404(Choice, pk=choice_pk)
+    if (
+        choice.current_scene_id != current_scene_id
+        or choice.next_scene_id is None
+        or choice.next_scene.story_id != story.pk
+    ):
+        messages.warning(request, "That choice isn't available from the current scene.")
+        return redirect("stories:play", pk=story.pk)
+    if len(path) >= MAX_PLAY_PATH_LENGTH:
+        messages.warning(request, "The play path has reached its maximum length.")
+        return redirect("stories:play", pk=story.pk)
+
+    request.session[f"play_{story.pk}"] = [*path, choice.next_scene_id]
+    return redirect("stories:play", pk=story.pk)
+
+
+def restart_story(request, pk):
+    story = get_object_or_404(Story, pk=pk)
+    if request.method != "POST":
+        return redirect("stories:play", pk=story.pk)
+
+    session_key = f"play_{story.pk}"
+    request.session.pop(session_key, None)
+    start_scene = story.scenes.filter(scene_start=True).first()
+    if start_scene is None:
+        messages.warning(request, "This story has no starting scene yet.")
+        return redirect("stories:detail", pk=story.pk)
+
+    request.session[session_key] = [start_scene.pk]
+    return redirect("stories:play", pk=story.pk)
 
 # Story Views
 class StoryListView(ListView):

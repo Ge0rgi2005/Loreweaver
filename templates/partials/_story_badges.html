@@ -1,0 +1,4 @@
+<span class="badge text-bg-secondary">{{ story.story_genre }} {{ story.get_story_genre_display }}</span>
+<span class="badge {% if story.is_open %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+    {{ story.story_status }} {{ story.get_story_status_display }}
+</span>
