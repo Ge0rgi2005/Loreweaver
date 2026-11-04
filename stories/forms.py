@@ -110,6 +110,12 @@ class SceneForm(FormControlMixin, forms.ModelForm):
         if scene_start and scene_end:
             self.add_error('scene_end', 'A scene cannot be both a start and an end scene.')
 
+        if scene_end and self.instance.pk and self.instance.choices.exists():
+            self.add_error(
+                'scene_end',
+                "Scenes with outgoing choices can't be marked as ending scenes.",
+            )
+
         if story and scene_start:
             starting_scenes = Scene.objects.filter(story=story, scene_start=True)
             if self.instance.pk:

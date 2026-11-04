@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import include, path
-from core.views import custom_404
 
 handler404 = "core.views.custom_404"
 

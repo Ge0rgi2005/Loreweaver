@@ -1,6 +1,5 @@
 from django.contrib import messages
 from django.db.models import Count
-from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
@@ -205,13 +204,7 @@ class StoryDeleteView(DeleteView):
 
     def form_valid(self, form):
         story_title = self.object.story_title
-
-        try:
-            response = super().form_valid(form)
-        except ProtectedError:
-            messages.error(self.request, "Cannot delete this story because it has associated scenes or choices.")
-            return redirect('stories:detail', pk=self.object.pk)
-
+        response = super().form_valid(form)
         messages.success(self.request, f'Story "{story_title}" has been deleted successfully.')
         return response
 
@@ -276,12 +269,7 @@ class SceneDeleteView(DeleteView):
     def form_valid(self, form):
         self.story_pk = self.object.story_id
         scene_title = self.object.scene_title
-        try:
-            response = super().form_valid(form)
-        except ProtectedError:
-            messages.error(self.request, "Cannot delete this scene because another object still references it.")
-            return redirect('scenes:detail', pk=self.object.pk)
-
+        response = super().form_valid(form)
         messages.success(self.request, f'Scene "{scene_title}" has been deleted successfully.')
         return response
 

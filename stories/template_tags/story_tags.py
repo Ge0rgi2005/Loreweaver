@@ -1,14 +1,16 @@
 from django import template
+import math
 
 register = template.Library()
 
 @register.filter
 def reading_time(text):
+    if not isinstance(text, str):
+        return ''
     words = text.split()
-    word_count = len(words)
-    reading_time_minutes = word_count / 200
-    return round(reading_time_minutes, 2)
+    reading_time_minutes = max(1, math.ceil(len(words) / 200))
+    return f'{reading_time_minutes} min read'
 
-@register.inclusion_tag('partials/_form.html')
-def story_badge(story):
+@register.inclusion_tag('partials/_story_badges.html')
+def story_badges(story):
     return {'story': story}

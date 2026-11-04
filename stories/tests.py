@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .forms import ChoiceForm, SceneForm, StoryEditForm
@@ -88,6 +88,38 @@ class StoryPageTests(TestCase):
         )
 
         self.assertRedirects(response, reverse("stories:detail", args=[closed_story.pk]))
+
+    def test_scene_with_outgoing_choices_cannot_be_edited_into_an_ending(self):
+        destination = Scene.objects.create(
+            story=self.story,
+            scene_title="Destination",
+            scene_content="The next scene.",
+        )
+        Choice.objects.create(
+            text="Continue",
+            current_scene=self.scene,
+            next_scene=destination,
+        )
+
+        response = self.client.post(
+            reverse("scenes:edit", args=[self.scene.pk]),
+            {
+                "scene_title": self.scene.scene_title,
+                "scene_content": self.scene.scene_content,
+                "scene_author": "",
+                "scene_end": "on",
+                "scene_order": "0",
+                "lore_entries": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "Scenes with outgoing choices can't be marked as ending scenes.",
+            response.context["form"].errors["scene_end"],
+        )
+        self.scene.refresh_from_db()
+        self.assertFalse(self.scene.scene_end)
 
     def test_choice_form_has_scene_choices_and_invalid_post_is_safe(self):
         response = self.client.get(reverse("scenes:choice_create", args=[self.scene.pk]))
@@ -432,3 +464,20 @@ class StoryPlayTests(TestCase):
         response = self.client.get(reverse("stories:play", args=[self.story.pk]))
 
         self.assertRedirects(response, reverse("stories:detail", args=[self.story.pk]))
+
+
+class NotFoundPageTests(TestCase):
+    @override_settings(DEBUG=False)
+    def test_not_found_uses_custom_page_when_debug_is_disabled(self):
+        response = self.client.get("/not-a-real-page/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, "This page wandered off the map", status_code=404)
+
+    @override_settings(DEBUG=True)
+    def test_not_found_uses_debug_page_when_debug_is_enabled(self):
+        response = self.client.get("/not-a-real-page/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, "Page not found", status_code=404)
+        self.assertNotContains(response, "This page wandered off the map", status_code=404)
