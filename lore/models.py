@@ -7,13 +7,13 @@ from .validators import validate_author_name, min_author_name_length, non_whites
 
 class LoreEntry(TimeStampedModel):
     CHOICES = [
-    ('🧙‍♂️', 'Character'),
-    ('🏰', 'Location'),
-    ('📜', 'Artifact'),
-    ('🧩', 'Event'),
-    ('👥', 'Faction'),
-]
-    
+        ('🧙‍♂️', 'Character'),
+        ('🏰', 'Location'),
+        ('📜', 'Artifact'),
+        ('🧩', 'Event'),
+        ('👥', 'Faction'),
+    ]
+
     entry_name = models.CharField(max_length=100)
     entry_type = models.CharField(max_length=20, choices=CHOICES, default='🧙‍♂️')
     entry_description = models.TextField(blank=True, validators=[non_whitespace_validator])

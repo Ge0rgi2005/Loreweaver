@@ -1,3 +1,4 @@
+from django.contrib.staticfiles import finders
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -36,7 +37,10 @@ class StoryPageTests(TestCase):
 
         for url in urls:
             with self.subTest(url=url):
-                self.assertEqual(self.client.get(url).status_code, 200)
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                if url == reverse("scenes:detail", args=[self.scene.pk]):
+                    self.assertContains(response, "1 min read")
 
     def test_story_list_filters_title_and_annotates_scene_count(self):
         response = self.client.get(reverse("stories:list"), {"story_title": "First"})
@@ -61,6 +65,31 @@ class StoryPageTests(TestCase):
             list(response.context["stories"]),
             [earlier_story, self.story],
         )
+
+    def test_story_list_pagination_preserves_filters(self):
+        for index in range(11):
+            Story.objects.create(
+                story_title=f"Filtered Tale {index}",
+                story_premise="A sufficiently long filtered story premise.",
+            )
+
+        response = self.client.get(
+            reverse("stories:list"),
+            {"story_title": "Filtered", "sort_by": "title", "page": 1},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["querystring"],
+            "story_title=Filtered&sort_by=title",
+        )
+        self.assertContains(
+            response,
+            "?story_title=Filtered&amp;sort_by=title&amp;page=2",
+        )
+
+    def test_custom_css_is_discoverable(self):
+        self.assertIsNotNone(finders.find("css/style.css"))
 
     def test_story_create_redirects_to_detail(self):
         response = self.client.post(

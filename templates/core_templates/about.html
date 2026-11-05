@@ -1,6 +1,37 @@
 {% extends "base.html" %}
 
+{% block title %}About | Loreweaver{% endblock %}
+
 {% block content %}
-<h1>About Loreweaver</h1>
-<p>Loreweaver is a place to create stories, scenes, choices, and lore.</p>
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <h1 class="display-5 fw-bold mb-3">Stories are better when they branch.</h1>
+        <p class="lead text-body-secondary">
+            Loreweaver is a collaborative home for interactive fiction. Build a story
+            one scene at a time, connect the scenes with choices, and let readers
+            decide where the tale goes.
+        </p>
+
+        <h2 class="h4 mt-5">Weave a world together</h2>
+        <p>
+            Start with a premise, then add scenes and choices to create paths through
+            your story. Keep characters, places, artifacts, events, and factions in
+            the lore codex, and link those entries to the scenes where they appear.
+            A story health check can help you spot unreachable scenes, dead ends, or
+            paths without a reachable ending.
+        </p>
+
+        <h2 class="h4 mt-4">Read your way through</h2>
+        <p>
+            Open a story's reader to follow its starting scene and choose what
+            happens next. Every choice is another thread in the story.
+        </p>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <a href="{% url 'stories:list' %}" class="btn btn-primary">Explore stories</a>
+            <a href="{% url 'stories:create' %}" class="btn btn-outline-secondary">Create a story</a>
+            <a href="{% url 'lore:list' %}" class="btn btn-outline-secondary">Browse the lore codex</a>
+        </div>
+    </div>
+</div>
 {% endblock %}

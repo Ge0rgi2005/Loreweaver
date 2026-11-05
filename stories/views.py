@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.http import urlencode
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from .forms import StoryEditForm, StoryForm, SceneForm, ChoiceForm, StoryFilterForm
 from .models import Story, Scene, Choice
@@ -167,6 +168,9 @@ class StoryListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['filter_form'] = StoryFilterForm(self.request.GET)
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+        context['querystring'] = urlencode(query_params, doseq=True)
         return context
 
 class StoryDetailView(DetailView):

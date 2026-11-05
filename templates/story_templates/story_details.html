@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load story_tags %}
 
 {% block title %}{{ story.story_title }} | Loreweaver{% endblock %}
 
@@ -6,7 +7,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
         <div class="mb-2">
-            {% include "partials/_story_badges.html" with story=story %}
+            {% story_badges story %}
         </div>
         <h1 class="h2">{{ story.story_title }}</h1>
         <p class="text-body-secondary mb-0">

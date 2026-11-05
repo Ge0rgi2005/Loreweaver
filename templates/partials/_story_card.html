@@ -1,10 +1,9 @@
+{% load story_tags %}
+
 <div class="card story-card h-100 shadow-sm">
     <div class="card-body d-flex flex-column">
         <div class="mb-2">
-            <span class="badge text-bg-secondary">{{ story.story_genre }} {{ story.get_story_genre_display }}</span>
-            <span class="badge {% if story.is_open %}text-bg-success{% else %}text-bg-secondary{% endif %}">
-                {{ story.story_status }} {{ story.get_story_status_display }}
-            </span>
+            {% story_badges story %}
         </div>
 
         <h2 class="h5 card-title">
